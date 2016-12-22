@@ -21,18 +21,15 @@ UserSchema.methods.generateJWT = function() {
 };
 
 UserSchema.methods.setPassword = function(password){
-	var hash = crypto.createHash('md5');
+	this.salt = crypto.randomBytes(16).toString('hex');
 
-	hash.update(password, 'utf8');
-	this.hash = hash.digest('hex');
+	this.hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
 };
 
 UserSchema.methods.validPassword = function(password) {
-  	var hash = crypto.createHash('md5');
+  	var hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
 
-  	hash.update(password, 'utf8');
-  	var testedHash = hash.digest('hex');
-  	return (this.hash === testedHash);	
+  	return this.hash === hash;
 };
 
 var User = mongoose.model('User', UserSchema);
